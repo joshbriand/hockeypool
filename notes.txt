@@ -1,0 +1,7 @@
+error when only one answer given
+
+test whether user has taken poll before or not
+	if yes, redirect to edit poll
+	else render take poll
+
+not as many decimals

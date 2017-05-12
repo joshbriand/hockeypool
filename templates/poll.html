@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<form method="post">
+	<label>
+		<div class="question">
+			Sample Question 1 (select one)
+		</div>
+		<label>
+			Option 1
+			<input type="radio" name="answer1" value="0">
+		</label>
+		<br>
+		<label>
+			Option 2
+			<input type="radio" name="answer1" value="1">
+		</label>
+		<br>
+		<label>
+			Option 3
+			<input type="radio" name="answer1" value="2">
+		</label>
+	</label>
+	<br>
+	<br>
+	<label>
+		<div class="question">
+			Sample Question 2 (select one)
+		</div>
+		<label>
+			Option 1
+			<input type="radio" name="answer2" value="0">
+		</label>
+		<br>
+		<label>
+			Option 2
+			<input type="radio" name="answer2" value="1">
+		</label>
+		<br>
+		<label>
+			Option 3
+			<input type="radio" name="answer2" value="2">
+		</label>
+	</label>
+	<div>
+		<input type="submit">
+	</div>
+	<div style="color:red;">
+		{{pollerror}}
+	</div>
+</form>
+
+{% endblock %}

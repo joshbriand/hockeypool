@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Hockey Pool Poll</title>
+    <style type="text/css">
+      * {
+        -webkit-box-sizing: border-box;
+        -moz-box-sizing: borderbox;
+        -ms-box-sizing: borderbox;
+        box-sizing: border-box;
+      }
+
+      .row {
+        width: 100%;
+        display: flex;
+        flex-wrap: wrap;}
+
+      .col-1 {
+        width: 8.33%;
+      }
+
+      .col-2 {
+        width: 16.67%;
+      }
+
+      .col-3 {
+        width: 25%;
+      }
+
+      .col-4 {
+        width: 33.33%;
+      }
+
+      .col-5 {
+        width: 41.67%;
+      }
+
+      .col-6 {
+        width: 50%;
+      }
+
+      .col-7 {
+        width: 58.33%;
+      }
+
+      .col-8 {
+        width: 66.67%;
+      }
+
+      .col-9 {
+        width: 75%;
+      }
+
+      .col-10 {
+        width: 83.33%;
+      }
+
+      .col-11{
+        width: 91.67%;
+      }
+
+      .col-12{
+        width: 100%;
+      }
+
+      .push{margin-bottom: 60px}
+
+      .error {
+        color: red;
+      }
+
+      .question {
+        font-weight: bold;
+      }
+
+      #links{
+        text-align: right;
+      }
+
+      #header{
+        position: fixed;
+        height: 60px;
+        top: 0;
+        background: lightgrey;
+      }
+
+      hr.main{
+	      border: 2px solid;
+      }
+
+      hr.sub{
+        border: 1px dashed;
+        color: grey;
+      }
+
+    </style>
+  </head>
+  <body>
+    <div class="grid">
+      <div class="row" id="header">
+        <div class="col-6" id="title">
+          <h1>Hockey Pool Poll</h1>
+        </div>
+          {% if logged_in == True %}
+            <div class="col-6">
+              <table>
+                <tr>
+                  <td>
+                    Logged in as <b>{{ user }}</b>
+                  </td>
+                  <td>
+                    <a href = "/logout">Log Out</a>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <a href = "/">Results</a>
+                  </td>
+                  <td>
+                    <a href = "/takepoll">Take Poll</a>
+                  </td>
+                </tr>
+              </table>
+            </div>
+          {% else %}
+            <div>
+              <form method="post">
+                <table>
+                  <tr>
+                    <td>
+                      Username
+                    </td>
+                    <td>
+                      Password
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <input type="text" name="login_username">
+                    </td>
+                    <td>
+                      <input type="password" name="login_password">
+                    </td>
+                    <td>
+                      <input type="submit" value="Log In">
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="error">
+                      {{error}}
+                    </td>
+                  </tr>
+                </table>
+              </form>
+            </div>
+          {% endif %}
+        </div>
+        <div class="push"></div>
+        {% block content %}
+        {% endblock %}
+      </div>
+    </div>
+  </body>
+</html>
