@@ -4,7 +4,7 @@ threadsafe: true
 
 handlers:
 - url: /.*
-  script: usersignup314.app
+  script: tacochooseday.app
 
 libraries:
   - name: jinja2

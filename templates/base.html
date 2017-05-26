@@ -102,7 +102,34 @@
         <div class="col-6" id="title">
           <h1>Hockey Pool Poll</h1>
         </div>
-          {% if logged_in == True %}
+          {% if logged_in == True and admin == True %}
+            <div class="col-6">
+              <table>
+                <tr>
+                  <td>
+                    Logged in as <b>{{ user }}</b>
+                  </td>
+                  <td>
+                    <a href = "/addquestion">Add Question</a>
+                  </td>
+                  <td>
+                    <a href = "/adduser">Add User</a>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <a href = "/logout">Log Out</a>
+                  </td>
+                  <td>
+                    <a href = "/deletequestion">Delete Quesion</a>
+                  </td>
+                  <td>
+                    <a href = "/deleteuser">Delete User</a>
+                  </td>
+                </tr>
+              </table>
+            </div>
+          {% elif logged_in == True %}
             <div class="col-6">
               <table>
                 <tr>
@@ -118,7 +145,7 @@
                     <a href = "/">Results</a>
                   </td>
                   <td>
-                    <a href = "/takepoll">Take Poll</a>
+                    <a href = "/takepoll">Take Poll (or change response)</a>
                   </td>
                 </tr>
               </table>

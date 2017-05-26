@@ -1,65 +1,44 @@
 {% extends "base.html" %}
 
 {% block content %}
-
-	<div class = "col-12 question">
-		{{ question1 }}
-	</div>
-	{% for x in range(answer1_results|length) %}
-		<div class = "col-12">
-			{% if answer1_results[x]|length == 1 %}
-				{{ answers1[x] }} - {{ answer1_results[x]|length }} vote
-				<b>
-					- {{ (answer1_results[x]|length / answer1total * 100)|round|int }}%
-				</b>
-				(
-				{% for y in range(answer1_results[x]|length) %}
-					{{ answer1_results[x][y] }}
-				{% endfor %}
-				)
-			{% endif %}
-			{% if answer1_results[x]|length != 1 %}
-				{{ answers1[x] }} - {{ answer1_results[x]|length }} votes
-				<b>
-					- {{ (answer1_results[x]|length / answer1total * 100)|round|int }}%
-				</b>
-				(
-				{% for y in range(answer1_results[x]|length) %}
-					{{ answer1_results[x][y] }},
-				{% endfor %}
-				)
-			{% endif %}
+	{% for result in results %}
+		<div class = "col-12 question">
+			{{ result [0] }}
 		</div>
-	{% endfor %}
-	<hr>
-	<div class = "col-12 question">
-		{{ question2 }}
-	</div>
-	{% for x in range(answer2_results|length) %}
-	<div class = "col-12">
-		{% if answer2_results[x]|length == 1 %}
-			{{ answers2[x] }} - {{ answer2_results[x]|length }} vote
-			<b>
-				- {{ (answer2_results[x]|length / answer2total * 100)|round|int }}%
-			</b>
-			(
-			{% for y in range(answer2_results[x]|length) %}
-				{{ answer2_results[x][y] }}
+		<table border="1">
+			<tr class = "headers">
+				<td>
+					Answer
+				</td>
+				<td>
+					# of votes
+				</td>
+				<td>
+					% of Votes
+				</td>
+				<td>
+					GMs
+				</td>
+			</tr>
+				{% for item in result[1] %}
+				<tr>
+					<td>
+						{{ item [0] }}
+					</td>
+					<td>
+						{{ item [1] | length }}
+					</td>
+					<td>
+						{{ (item [1] | length / result [2] * 100) | round(1) }}%
+					</td>
+					<td>
+						{% for user in item [1] %}
+							{{ user }}
+						{% endfor %}
+					</td>
+				</tr>
 			{% endfor %}
-			)
-		{% endif %}
-		{% if answer2_results[x]|length != 1 %}
-			{{ answers2[x] }} - {{ answer2_results[x]|length }} votes
-			<b>
-				- {{ (answer2_results[x]|length / answer2total * 100)|round|int }}%
-			</b>
-			(
-			{% for y in range(answer2_results[x]|length) %}
-				{{ answer2_results[x][y] }},
-			{% endfor %}
-			)
-		{% endif %}
-	</div>
+		</table>
+		<br>
 	{% endfor %}
-
 {% endblock %}

@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Delete a question from the poll</h2>
+<form method="post">
+	{% for question in questions %}
+		{% if user.username == "admin" %}
+		{% else %}
+			{{ question.question }}
+			<input type="radio" name="deletequestion" value="{{ question.question }}">
+			<br>
+		{% endif %}
+	{% endfor %}
+	<input type="submit" value="Delete">
+</form>
+
+{% endblock %}
