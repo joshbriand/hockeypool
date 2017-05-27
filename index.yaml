@@ -10,12 +10,6 @@ indexes:
 # automatically uploaded to the admin console when you next deploy
 # your application using appcfg.py.
 
-- kind: TestUsers21
-  ancestor: yes
-  properties:
-  - name: created
-    direction: desc
-
 - kind: TestQuestions21
   ancestor: yes
   properties:
@@ -23,6 +17,12 @@ indexes:
     direction: desc
 
 - kind: TestResults21
+  ancestor: yes
+  properties:
+  - name: created
+    direction: desc
+
+- kind: TestUsers21
   ancestor: yes
   properties:
   - name: created
