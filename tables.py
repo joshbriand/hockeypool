@@ -1,6 +1,8 @@
 from google.appengine.ext import ndb
 
 # code to create user table
+
+
 class TestUsers21(ndb.Model):
     username = ndb.StringProperty(required=True)  # username
     password = ndb.StringProperty(required=True)  # hashed password
