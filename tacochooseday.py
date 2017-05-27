@@ -1,11 +1,13 @@
+python#To do
+# - break into modules
+
 import webapp2
 import os
 import jinja2
 import re
 import hmac
-import time
 
-from google.appengine.ext import db
+from google.appengine.ext import ndb
 
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
 jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(template_dir),
@@ -19,6 +21,8 @@ PASSWORD_RE = re.compile(r"^.{3,20}$")
 def validate(input, validation):
     return validation.match(input)
 
+#ancestor name
+DEFAULT_BLOG_NAME = 'tacocat'
 
 # code for hashing
 secret = "guest"
@@ -42,12 +46,18 @@ def make_temp_password(password):
     return make_secure_val('temp', password).split('|')[1]
 
 
+def blog_key(blog_name=DEFAULT_BLOG_NAME):
+    '''code to create key for blog, so site can use strong consistency, code
+    came from Google's solution to their guestbook tutorial'''
+    return ndb.Key('Blog', blog_name)
+
+
 # code to create user table
-class TestUsers21(db.Model):
-    username = db.StringProperty(required=True)  # username
-    password = db.StringProperty(required=True)  # hashed password
+class TestUsers21(ndb.Model):
+    username = ndb.StringProperty(required=True)  # username
+    password = ndb.StringProperty(required=True)  # hashed password
     # datetime stamp of creation of user
-    created = db.DateTimeProperty(auto_now_add=True)
+    created = ndb.DateTimeProperty(auto_now_add=True)
 
     def render(self):
         self._render_text = self.content.replace('\n', '<br>')
@@ -55,19 +65,19 @@ class TestUsers21(db.Model):
 
 
 # code to create question table
-class TestQuestions21(db.Model):
-    question = db.StringProperty(required=True)
-    options = db.StringListProperty(required=True)
+class TestQuestions21(ndb.Model):
+    question = ndb.StringProperty(required=True)
+    options = ndb.StringProperty(repeated=True)
 
     def render(self):
         self._render_text = self.content.replace('\n', '<br>')
         return render_str("post.html", p=self)
 
 
-class TestResults21(db.Model):
-    choice = db.StringProperty()
-    question = db.StringProperty()
-    user = db.StringProperty()
+class TestResults21(ndb.Model):
+    choice = ndb.StringProperty()
+    question = ndb.StringProperty()
+    user = ndb.StringProperty()
 
     def render(self):
         self._render_text = self.content.replace('\n', '<br>')
@@ -92,7 +102,7 @@ class Handler(webapp2.RequestHandler):
         if visit_cookie_str:
             visitor_id = int(visit_cookie_str.split('|')[0])
             visitor_password = visit_cookie_str.split('|')[1]
-            visitor = TestUsers21.get_by_id(visitor_id)
+            visitor = TestUsers21.get_by_id(visitor_id, parent=blog_key(DEFAULT_BLOG_NAME))
             if visitor:
                 if visitor_password == visitor.password:
                     return True
@@ -106,7 +116,7 @@ class Handler(webapp2.RequestHandler):
             return ""
         else:
             visitor_id = int(visit_cookie_str.split('|')[0])
-            visitor = TestUsers21.get_by_id(visitor_id)
+            visitor = TestUsers21.get_by_id(visitor_id, parent=blog_key(DEFAULT_BLOG_NAME))
             if visitor:
                 return visitor.username
             else:
@@ -120,7 +130,7 @@ class Handler(webapp2.RequestHandler):
             return False
         else:
             visitor_id = int(visit_cookie_str.split('|')[0])
-            visitor = TestUsers21.get_by_id(visitor_id)
+            visitor = TestUsers21.get_by_id(visitor_id, parent=blog_key(DEFAULT_BLOG_NAME))
             if visitor:
                 if visitor.username == "admin":
                     return True
@@ -134,15 +144,15 @@ class Handler(webapp2.RequestHandler):
 
         login_hashed_password = make_temp_password(login_password)
 
-        user_check = db.GqlQuery(
-            "SELECT * FROM TestUsers21 WHERE username = :user",
-            user=login_username)
+        user_check = ndb.gql(
+            "SELECT * FROM TestUsers21 WHERE username = :user AND ANCESTOR is :ancestor",
+            user=login_username, ancestor = blog_key(DEFAULT_BLOG_NAME))
 
         if user_check.get():
             print "user exists in database"
             for user in user_check:
                 db_password = user.password  # hashed password from user database
-                db_id = user.key().id()  # user ID from user database
+                db_id = user.key.id()  # user ID from user database
             if login_hashed_password == db_password:
                 # create cookie
                 new_cookie = make_secure_val(db_id, login_password)
@@ -171,29 +181,34 @@ class Logout(Handler):
 class Results(Handler):
     def get(self):
         #josh add Admin user if does not exist
-        adminExist = db.GqlQuery("SELECT * FROM TestUsers21 WHERE user = :user", user = "admin")
+        adminExist = ndb.gql("SELECT * FROM TestUsers21 WHERE username = :user AND ANCESTOR is :ancestor",
+        user = "admin", ancestor = blog_key(DEFAULT_BLOG_NAME))
         admin = adminExist.get()
         if not admin:
             hashed_password = make_temp_password('59543')
             new_user = TestUsers21(
-                username='admin', password=hashed_password)
+                username='admin',
+                password=hashed_password,
+                parent=blog_key(DEFAULT_BLOG_NAME))
             new_user.put()
             print "new user created"
-            time.sleep(.1)
         resultList = []
-        questions = db.GqlQuery("SELECT * FROM TestQuestions21")
+        questions = ndb.gql("SELECT * FROM TestQuestions21 WHERE ANCESTOR is :1",
+        blog_key(DEFAULT_BLOG_NAME))
         questionList = []
         for question in questions:
             questionList = []
             votes = 0
             questionList.append(question.question)
-            optionsQuery = db.GqlQuery("SELECT * FROM TestQuestions21 WHERE question = :question", question = question.question)
+            optionsQuery = ndb.gql("SELECT * FROM TestQuestions21 WHERE question = :question AND ANCESTOR is :ancestor",
+            question = question.question, ancestor = blog_key(DEFAULT_BLOG_NAME))
             optionList = optionsQuery.get()
             choicesList = []
             for option in optionList.options:
                 choiceList = []
                 choiceList.append(option)
-                users = db.GqlQuery("SELECT * FROM TestResults21 WHERE question = :question AND choice = :choice", question = question.question, choice = option)
+                users = ndb.gql("SELECT * FROM TestResults21 WHERE question = :question AND choice = :choice AND ANCESTPR is :ancestor",
+                question = question.question, choice = option, ancestor = blog_key(DEFAULT_BLOG_NAME))
                 userList = []
                 if users:
                     for user in users:
@@ -225,13 +240,15 @@ class Results(Handler):
 class TakePoll(Handler):
     def get(self):
         user = self.user_logged_in()
-        userCheck = db.GqlQuery("SELECT * FROM TestResults21 WHERE user = :user", user=user)
+        userCheck = ndb.gql("SELECT * FROM TestResults21 WHERE user = :user AND ANCESTOR is :ancestor",
+        user=user, ancestor = blog_key(DEFAULT_BLOG_NAME))
         x = 0
         for user in userCheck:
             x += 1
         if x == 0:
             if self.authenticate_user() and self.admin_logged_in() != True:
-                questions = db.GqlQuery("SELECT * FROM TestQuestions21")
+                questions = ndb.gql("SELECT * FROM TestQuestions21 WHERE ANCESTOR is :ancestor",
+                ancestor = blog_key(DEFAULT_BLOG_NAME))
                 print self.admin_logged_in()
                 self.render(
                     "takepoll.html",
@@ -246,26 +263,29 @@ class TakePoll(Handler):
 
     def post(self):
         if self.authenticate_user() and self.admin_logged_in() != True:
-            questions = db.GqlQuery("SELECT * FROM TestQuestions21")
+            questions = ndb.gql("SELECT * FROM TestQuestions21 WHERE ANCESTOR is :ancestor",
+            ancestor = blog_key(DEFAULT_BLOG_NAME))
             user = self.user_logged_in()
             for question in questions:
                 question = question.question
                 choice = self.request.get(question)
-                current_choice = TestResults21(user=user, question=question, choice=choice)
+                current_choice = TestResults21(user=user, question=question, choice=choice,
+                parent=blog_key(DEFAULT_BLOG_NAME))
                 current_choice.put()
                 print "choices saved in database"
-                time.sleep(.1)
             self.redirect('/')
         else:
             self.redirect('/')
 
 class Edit(Handler):
     def get(self):
-        choices = db.GqlQuery("SELECT * FROM TestResults21 WHERE user = :user", user = self.user_logged_in())
+        choices = ndb.gql("SELECT * FROM TestResults21 WHERE user = :user AND ANCESTOR is :ancestor",
+        user = self.user_logged_in(), ancestor = blog_key(DEFAULT_BLOG_NAME))
         choiceDict = {}
         for choice in choices:
             choiceDict[choice.question] = choice.choice
-        questions = db.GqlQuery("SELECT * FROM TestQuestions21")
+        questions = ndb.gql("SELECT * FROM TestQuestions21 WHERE ANCESTOR is :ancestor",
+        ancestor = blog_key(DEFAULT_BLOG_NAME))
         self.render(
             "editresults.html",
             logged_in=self.authenticate_user(),
@@ -276,19 +296,21 @@ class Edit(Handler):
 
     def post(self):
         if self.authenticate_user() and self.admin_logged_in() != True:
-            oldResults = db.GqlQuery("SELECT * FROM TestResults21 WHERE user = :user", user = self.user_logged_in())
+            oldResults = ndb.gql("SELECT * FROM TestResults21 WHERE user = :user AND ANCESTOR is :ancestor",
+            user = self.user_logged_in(), ancestor = blog_key(DEFAULT_BLOG_NAME))
             for oldResult in oldResults:
-                TestResults21.delete(oldResult)
+                oldResult.key.delete()
                 print "result deleted"
-            questions = db.GqlQuery("SELECT * FROM TestQuestions21")
+            questions = ndb.gql("SELECT * FROM TestQuestions21 WHERE ANCESTOR is :ancestor",
+            ancestor = blog_key(DEFAULT_BLOG_NAME))
             user = self.user_logged_in()
             for question in questions:
                 question = question.question
                 choice = self.request.get(question)
-                current_choice = TestResults21(user=user, question=question, choice=choice)
+                current_choice = TestResults21(user=user, question=question, choice=choice,
+                parent=blog_key(DEFAULT_BLOG_NAME))
                 current_choice.put()
                 print "choices saved in database"
-                time.sleep(.1)
             self.redirect('/')
         else:
             self.redirect('/')
@@ -319,10 +341,10 @@ class AddQuestion(Handler):
                 options.append(self.request.get("option4"))
             if self.request.get("option5") != "":
                 options.append(self.request.get("option5"))
-            new_question = TestQuestions21(question=question, options=options)
+            new_question = TestQuestions21(question=question, options=options,
+            parent=blog_key(DEFAULT_BLOG_NAME))
             new_question.put()
             print "new question created"
-            time.sleep(.1)
             self.redirect('/')
 
 
@@ -330,7 +352,8 @@ class AddQuestion(Handler):
 class DeleteQuestion(Handler):
     def get(self):
         if self.user_logged_in() == "admin":
-            questions = db.GqlQuery("SELECT * FROM TestQuestions21")
+            questions = ndb.gql("SELECT * FROM TestQuestions21 WHERE ANCESTOR is :ancestor",
+            ancestor = blog_key(DEFAULT_BLOG_NAME))
             self.render(
                 "deletequestion.html",
                 logged_in=self.authenticate_user(),
@@ -343,15 +366,16 @@ class DeleteQuestion(Handler):
     def post(self):
         if self.user_logged_in() == "admin":
             deleteQuestionQuestion = self.request.get("deletequestion")
-            deleteQueryQ = db.GqlQuery("SELECT * FROM TestQuestions21 WHERE question = :question", question=deleteQuestionQuestion)
+            deleteQueryQ = ndb.gql("SELECT * FROM TestQuestions21 WHERE question = :question AND ANCESTOR is :ancestor",
+            question=deleteQuestionQuestion, ancestor = blog_key(DEFAULT_BLOG_NAME))
             deleteQuestion = deleteQueryQ.get()
-            TestQuestions21.delete(deleteQuestion)
+            deleteQuestion.key.delete()
             print "question deleted"
-            deleteResults = db.GqlQuery("SELECT * FROM TestResults21 WHERE question = :question", question=deleteQuestionQuestion)
+            deleteResults = ndb.gql("SELECT * FROM TestResults21 WHERE question = :question AND ANCESTOR is :ancestor",
+            question=deleteQuestionQuestion, ancestor = blog_key(DEFAULT_BLOG_NAME))
             for deleteResult in deleteResults:
-                TestResults21.delete(deleteResult)
+                deleteResult.key.delete()
                 print "result deleted"
-            time.sleep(.1)
             self.redirect('/')
         else:
             self.redirect('/logout')
@@ -393,9 +417,9 @@ class AddUser(Handler):
                             username=username,
                             admin=self.admin_logged_in())
             else:
-                user_check = db.GqlQuery(
-                    "SELECT * FROM TestUsers21 WHERE username = :user",
-                    user=username)
+                user_check = ndb.gql(
+                    "SELECT * FROM TestUsers21 WHERE username = :user AND ANCESTOR is :ancestor",
+                    user=username, ancestor = blog_key(DEFAULT_BLOG_NAME))
                 if user_check.get():
                     user_error = "This username is already being used."
                     self.render("adduser.html", user_error=user_error,
@@ -406,17 +430,18 @@ class AddUser(Handler):
                 else:
                     hashed_password = make_temp_password(password)
                     new_user = TestUsers21(
-                        username=username, password=hashed_password)
+                        username=username, password=hashed_password,
+                        parent=blog_key(DEFAULT_BLOG_NAME))
                     new_user.put()
                     print "new user created"
-                    time.sleep(.1)
                     self.redirect('/')
 
 
 class DeleteUser(Handler):
     def get(self):
         if self.user_logged_in() == "admin":
-            users = db.GqlQuery("SELECT * FROM TestUsers21")
+            users = ndb.gql("SELECT * FROM TestUsers21 WHERE ANCESTOR is :ancestor",
+            ancestor = blog_key(DEFAULT_BLOG_NAME))
             self.render(
                 "deleteuser.html",
                 logged_in=self.authenticate_user(),
@@ -429,15 +454,16 @@ class DeleteUser(Handler):
     def post(self):
         if self.user_logged_in() == "admin":
             deleteUsername = self.request.get("deleteuser")
-            deleteQuery = db.GqlQuery("SELECT * FROM TestUsers21 WHERE username = :user", user=deleteUsername)
+            deleteQuery = ndb.gql("SELECT * FROM TestUsers21 WHERE username = :user AND ANCESTOR is :ancestor",
+            user=deleteUsername, ancestor = blog_key(DEFAULT_BLOG_NAME))
             deleteUser = deleteQuery.get()
-            TestUsers21.delete(deleteUser)
+            deleteUser.key.delete()
             print "user deleted"
-            deleteResults = db.GqlQuery("SELECT * FROM TestResults21 WHERE user = :user", user=deleteUsername)
+            deleteResults = ndb.gql("SELECT * FROM TestResults21 WHERE user = :user AND ANCESTOR is :ancestor",
+            user=deleteUsername, ancestor = blog_key(DEFAULT_BLOG_NAME))
             for deleteResult in deleteResults:
-                TestResults21.delete(deleteResult)
+                deleteResult.key.delete()
                 print "result deleted"
-            time.sleep(.1)
             self.redirect('/')
         else:
             self.redirect('/logout')
