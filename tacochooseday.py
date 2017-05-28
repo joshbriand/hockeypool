@@ -12,6 +12,7 @@ app = handlers.webapp2.WSGIApplication([('/logout', handlers.Logout),
                                         ('/addquestion', handlers.AddQuestion),
                                         ('/deletequestion', handlers.DeleteQuestion),
                                         ('/adduser', handlers.AddUser),
-                                        ('/deleteuser', handlers.DeleteUser)
+                                        ('/deleteuser', handlers.DeleteUser),
+                                        ('/changepassword', handlers.ChangePassword)
                                         ],
                                        debug=True)

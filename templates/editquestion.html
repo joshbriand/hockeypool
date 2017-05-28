@@ -9,7 +9,7 @@
 			</div>
 			{% for option in question.options %}
 				<input type="radio" name="{{ question.question }}" value="{{ option }}">
-				{{ option|safe }}
+				{{ option }}
 				<br>
 			{% endfor %}
 		</label>

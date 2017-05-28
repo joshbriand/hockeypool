@@ -1,3 +1,6 @@
+#to do: add editquestion
+#add ssl (https://cloud.google.com/compute/docs/load-balancing/http/ssl-certificates#gettingakeyandcertificate)
+
 from google.appengine.ext import ndb
 import webapp2
 import jinja2
@@ -138,7 +141,6 @@ class Logout(Handler):
 
 class Results(Handler):
     def get(self):
-        # josh add Admin user if does not exist
         adminExist = ndb.gql(
             "SELECT * FROM TestUsers21 WHERE username = :user AND ANCESTOR is :ancestor",
             user="admin",
@@ -326,7 +328,8 @@ class AddQuestion(Handler):
                                            parent=blog_key(DEFAULT_BLOG_NAME))
             new_question.put()
             print "new question created"
-            self.redirect('/')
+            self.redirect('/addquestion')
+
 
 
 # delete results associated
@@ -362,7 +365,7 @@ class DeleteQuestion(Handler):
             for deleteResult in deleteResults:
                 deleteResult.key.delete()
                 print "result deleted"
-            self.redirect('/')
+            self.redirect('/deletequestion')
         else:
             self.redirect('/logout')
 
@@ -422,7 +425,7 @@ class AddUser(Handler):
                         parent=blog_key(DEFAULT_BLOG_NAME))
                     new_user.put()
                     print "new user created"
-                    self.redirect('/')
+                    self.redirect('/adduser')
 
 
 class DeleteUser(Handler):
@@ -457,9 +460,57 @@ class DeleteUser(Handler):
             for deleteResult in deleteResults:
                 deleteResult.key.delete()
                 print "result deleted"
-            self.redirect('/')
+            self.redirect('/deleteuser')
         else:
             self.redirect('/logout')
+
+class ChangePassword(Handler):
+    def get(self):
+        if self.authenticate_user() and self.admin_logged_in() != True:
+
+            self.render(
+                "changepassword.html",
+                logged_in=self.authenticate_user(),
+                user=self.user_logged_in())
+        else:
+            self.redirect('/')
+
+    def post(self):
+        if self.authenticate_user() and self.admin_logged_in() != True:
+            password = self.request.get("password")
+            verify = self.request.get("verify")
+
+            password_error = ""
+            verify_error = ""
+
+            userQ = ndb.gql(
+                "SELECT * FROM TestUsers21 WHERE username = :user AND ANCESTOR is :ancestor",
+                user=self.user_logged_in(),
+                ancestor=blog_key(DEFAULT_BLOG_NAME))
+            user = userQ.get()
+            username = user.username
+
+            if self.validate(password, PASSWORD_RE) is None:
+                password_error = "That wasn't a valid password."
+            if verify != password:
+                verify_error = "Your passwords didn't match."
+            if password_error != "" or verify_error != "":
+                self.render("changepassword.html",
+                            password_error=password_error,
+                            verify_error=verify_error,
+                            admin=self.admin_logged_in())
+            else:
+                user_check = ndb.gql(
+                    "SELECT * FROM TestUsers21 WHERE username = :user AND ANCESTOR is :ancestor",
+                    user=username,
+                    ancestor=blog_key(DEFAULT_BLOG_NAME))
+
+                hashed_password = self.make_temp_password(password)
+                user.password = hashed_password
+                user.put()
+                print "password changed"
+
+                self.redirect('/')
 
 
 from tables import TestUsers21, TestResults21, TestQuestions21, blog_key

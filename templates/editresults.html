@@ -17,7 +17,7 @@
 						<input type="radio" name="{{ question.question }}" value="{{ option }}">
 					{% endif %}
 				{% endfor %}
-				{{ option }}
+				{{ option | safe }}
 				<br>
 			{% endfor %}
 		</label>

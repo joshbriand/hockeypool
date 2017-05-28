@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+dev<!DOCTYPE html>
 <html>
   <head>
     <meta charset="utf-8">
@@ -64,7 +64,7 @@
         width: 100%;
       }
 
-      .push{margin-bottom: 60px}
+      .push{margin-bottom: 70px}
 
       .error {
         color: red;
@@ -80,7 +80,7 @@
 
       #header{
         position: fixed;
-        height: 60px;
+        height: 70px;
         top: 0;
         background: lightgrey;
       }
@@ -127,6 +127,13 @@
                     <a href = "/deleteuser">Delete User</a>
                   </td>
                 </tr>
+                <tr>
+                  <td>
+                  </td>
+                  <td>
+                    <a href = "/editquestion">Edit Question</a>
+                  </td>
+                </tr>
               </table>
             </div>
           {% elif logged_in == True %}
@@ -138,6 +145,9 @@
                   </td>
                   <td>
                     <a href = "/logout">Log Out</a>
+                  </td>
+                  <td>
+                    <a href = "/changepassword">Change Password</a>
                   </td>
                 </tr>
                 <tr>

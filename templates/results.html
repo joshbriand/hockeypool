@@ -8,7 +8,7 @@
 		<table border="1">
 			<tr class = "headers">
 				<td>
-					Answer
+					Option
 				</td>
 				<td>
 					# of votes
@@ -23,7 +23,7 @@
 				{% for item in result[1] %}
 				<tr>
 					<td>
-						{{ item [0] }}
+						{{ item [0] | safe }}
 					</td>
 					<td>
 						{{ item [1] | length }}
