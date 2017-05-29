@@ -3,26 +3,24 @@
 {% block content %}
 <form method="post">
 	{% for question in questions %}
-		<label>
+		<div class="col-9">
 			<div class="question ">
 				{{ question.question }}
 			</div>
 			{% for option in question.options %}
-				{% for question2 in choices %}
-					{% if question2 == question.question and option == choices[question2] %}
+					{% if option in choices[question.question] %}
 						<input type="radio" name="{{ question.question }}" value="{{ option }}" checked="checked">
-					{% elif question2 == question.question and option != choices[question2]%}
+					{% elif option not in choices[question.question] %}
 						<input type="radio" name="{{ question.question }}" value="{{ option }}">
 					{% elif question.question not in choices %}
 						<input type="radio" name="{{ question.question }}" value="{{ option }}">
 					{% endif %}
-				{% endfor %}
 				{{ option | safe }}
 				<br>
 			{% endfor %}
-		</label>
-		<br>
-		<br>
+			<br>
+			<br>
+		</div>
 	{% endfor %}
 	<input type="submit">
 </form>

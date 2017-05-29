@@ -2,21 +2,39 @@
 
 {% block content %}
 <form method="post">
-	{% for question in questions %}
-		<label>
-			<div class="question ">
-				{{ question.question }}
-			</div>
-			{% for option in question.options %}
-				<input type="radio" name="{{ question.question }}" value="{{ option }}">
-				{{ option }}
-				<br>
-			{% endfor %}
-		</label>
-		<br>
-		<br>
-	{% endfor %}
+	<select name="question">
+		{% for question in questions %}
+			<option value="{{ question.question }}">{{ question.question }}</option>
+		{% endfor %}
+	</select>
+	<br><br>
 	<input type="submit">
 </form>
+<br>
+{% if editquestion %}
+	<form method="post">
+		Question
+		<input type="text" name="question" size="120px" value="{{ editquestion.question }}">
+		<br><br>
+		Option #1
+		<input type="text" name="option1" size="118px">
+		<br><br>
+		Option #2
+		<input type="text" name="option2" size="118px">
+		<br><br>
+		Option #3
+		<input type="text" name="option3" size="118px">
+		<br><br>
+		Option #4
+		<input type="text" name="option4" size="118px">
+		<br><br>
+		Option #5
+		<input type="text" name="option5" size="118px">
+		<br><br>
+		<i>Feel free to leave an Option field blank</i>
+		<br>
+		<input type="submit" value="Add Question">
+	</form>
+{% endif %}
 
 {% endblock %}

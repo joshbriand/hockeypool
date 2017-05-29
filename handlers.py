@@ -88,7 +88,7 @@ class Handler(webapp2.RequestHandler):
         login_hashed_password = self.make_temp_password(login_password)
 
         user_check = ndb.gql(
-            "SELECT * FROM TestUsers21 WHERE username = :user AND ANCESTOR is :ancestor",
+            "SELECT * FROM TestUsers21 WHERE username = :user AND ANCESTOR is :ancestor ORDER BY created",
             user=login_username,
             ancestor=blog_key(DEFAULT_BLOG_NAME))
 
@@ -142,7 +142,7 @@ class Logout(Handler):
 class Results(Handler):
     def get(self):
         adminExist = ndb.gql(
-            "SELECT * FROM TestUsers21 WHERE username = :user AND ANCESTOR is :ancestor",
+            "SELECT * FROM TestUsers21 WHERE username = :user AND ANCESTOR is :ancestor ORDER BY created",
             user="admin",
             ancestor=blog_key(DEFAULT_BLOG_NAME))
         admin = adminExist.get()
@@ -156,7 +156,7 @@ class Results(Handler):
             print "new user created"
         resultList = []
         questions = ndb.gql(
-            "SELECT * FROM TestQuestions21 WHERE ANCESTOR is :1",
+            "SELECT * FROM TestQuestions21 WHERE ANCESTOR is :1 ORDER BY created",
             blog_key(DEFAULT_BLOG_NAME))
         questionList = []
         for question in questions:
@@ -164,7 +164,7 @@ class Results(Handler):
             votes = 0
             questionList.append(question.question)
             optionsQuery = ndb.gql(
-                "SELECT * FROM TestQuestions21 WHERE question = :question AND ANCESTOR is :ancestor",
+                "SELECT * FROM TestQuestions21 WHERE question = :question AND ANCESTOR is :ancestor ORDER BY created",
                 question=question.question,
                 ancestor=blog_key(DEFAULT_BLOG_NAME))
             optionList = optionsQuery.get()
@@ -173,7 +173,7 @@ class Results(Handler):
                 choiceList = []
                 choiceList.append(option)
                 users = ndb.gql(
-                    "SELECT * FROM TestResults21 WHERE question = :question AND choice = :choice AND ANCESTOR is :ancestor",
+                    "SELECT * FROM TestResults21 WHERE question = :question AND choice = :choice AND ANCESTOR is :ancestor ORDER BY created",
                     question=question.question,
                     choice=option,
                     ancestor=blog_key(DEFAULT_BLOG_NAME))
@@ -207,7 +207,7 @@ class TakePoll(Handler):
     def get(self):
         user = self.user_logged_in()
         userCheck = ndb.gql(
-            "SELECT * FROM TestResults21 WHERE user = :user AND ANCESTOR is :ancestor",
+            "SELECT * FROM TestResults21 WHERE user = :user AND ANCESTOR is :ancestor ORDER BY created",
             user=user,
             ancestor=blog_key(DEFAULT_BLOG_NAME))
         x = 0
@@ -216,7 +216,7 @@ class TakePoll(Handler):
         if x == 0:
             if self.authenticate_user() and self.admin_logged_in() != True:
                 questions = ndb.gql(
-                    "SELECT * FROM TestQuestions21 WHERE ANCESTOR is :ancestor",
+                    "SELECT * FROM TestQuestions21 WHERE ANCESTOR is :ancestor ORDER BY created",
                     ancestor=blog_key(DEFAULT_BLOG_NAME))
                 print self.admin_logged_in()
                 self.render(
@@ -233,7 +233,7 @@ class TakePoll(Handler):
     def post(self):
         if self.authenticate_user() and self.admin_logged_in() != True:
             questions = ndb.gql(
-                "SELECT * FROM TestQuestions21 WHERE ANCESTOR is :ancestor",
+                "SELECT * FROM TestQuestions21 WHERE ANCESTOR is :ancestor ORDER BY created",
                 ancestor=blog_key(DEFAULT_BLOG_NAME))
             user = self.user_logged_in()
             for question in questions:
@@ -254,14 +254,14 @@ class TakePoll(Handler):
 class Edit(Handler):
     def get(self):
         choices = ndb.gql(
-            "SELECT * FROM TestResults21 WHERE user = :user AND ANCESTOR is :ancestor",
+            "SELECT * FROM TestResults21 WHERE user = :user AND ANCESTOR is :ancestor ORDER BY created",
             user=self.user_logged_in(),
             ancestor=blog_key(DEFAULT_BLOG_NAME))
         choiceDict = {}
         for choice in choices:
             choiceDict[choice.question] = choice.choice
         questions = ndb.gql(
-            "SELECT * FROM TestQuestions21 WHERE ANCESTOR is :ancestor",
+            "SELECT * FROM TestQuestions21 WHERE ANCESTOR is :ancestor ORDER BY created",
             ancestor=blog_key(DEFAULT_BLOG_NAME))
         self.render(
             "editresults.html",
@@ -274,14 +274,14 @@ class Edit(Handler):
     def post(self):
         if self.authenticate_user() and self.admin_logged_in() != True:
             oldResults = ndb.gql(
-                "SELECT * FROM TestResults21 WHERE user = :user AND ANCESTOR is :ancestor",
+                "SELECT * FROM TestResults21 WHERE user = :user AND ANCESTOR is :ancestor ORDER BY created",
                 user=self.user_logged_in(),
                 ancestor=blog_key(DEFAULT_BLOG_NAME))
             for oldResult in oldResults:
                 oldResult.key.delete()
                 print "result deleted"
             questions = ndb.gql(
-                "SELECT * FROM TestQuestions21 WHERE ANCESTOR is :ancestor",
+                "SELECT * FROM TestQuestions21 WHERE ANCESTOR is :ancestor ORDER BY created",
                 ancestor=blog_key(DEFAULT_BLOG_NAME))
             user = self.user_logged_in()
             for question in questions:
@@ -337,7 +337,7 @@ class DeleteQuestion(Handler):
     def get(self):
         if self.user_logged_in() == "admin":
             questions = ndb.gql(
-                "SELECT * FROM TestQuestions21 WHERE ANCESTOR is :ancestor",
+                "SELECT * FROM TestQuestions21 WHERE ANCESTOR is :ancestor ORDER BY created",
                 ancestor=blog_key(DEFAULT_BLOG_NAME))
             self.render(
                 "deletequestion.html",
@@ -352,14 +352,14 @@ class DeleteQuestion(Handler):
         if self.user_logged_in() == "admin":
             deleteQuestionQuestion = self.request.get("deletequestion")
             deleteQueryQ = ndb.gql(
-                "SELECT * FROM TestQuestions21 WHERE question = :question AND ANCESTOR is :ancestor",
+                "SELECT * FROM TestQuestions21 WHERE question = :question AND ANCESTOR is :ancestor ORDER BY created",
                 question=deleteQuestionQuestion,
                 ancestor=blog_key(DEFAULT_BLOG_NAME))
             deleteQuestion = deleteQueryQ.get()
             deleteQuestion.key.delete()
             print "question deleted"
             deleteResults = ndb.gql(
-                "SELECT * FROM TestResults21 WHERE question = :question AND ANCESTOR is :ancestor",
+                "SELECT * FROM TestResults21 WHERE question = :question AND ANCESTOR is :ancestor ORDER BY created",
                 question=deleteQuestionQuestion,
                 ancestor=blog_key(DEFAULT_BLOG_NAME))
             for deleteResult in deleteResults:
@@ -408,7 +408,7 @@ class AddUser(Handler):
                             admin=self.admin_logged_in())
             else:
                 user_check = ndb.gql(
-                    "SELECT * FROM TestUsers21 WHERE username = :user AND ANCESTOR is :ancestor",
+                    "SELECT * FROM TestUsers21 WHERE username = :user AND ANCESTOR is :ancestor ORDER BY created",
                     user=username,
                     ancestor=blog_key(DEFAULT_BLOG_NAME))
                 if user_check.get():
@@ -432,7 +432,7 @@ class DeleteUser(Handler):
     def get(self):
         if self.user_logged_in() == "admin":
             users = ndb.gql(
-                "SELECT * FROM TestUsers21 WHERE ANCESTOR is :ancestor",
+                "SELECT * FROM TestUsers21 WHERE ANCESTOR is :ancestor ORDER BY created",
                 ancestor=blog_key(DEFAULT_BLOG_NAME))
             self.render(
                 "deleteuser.html",
@@ -447,14 +447,14 @@ class DeleteUser(Handler):
         if self.user_logged_in() == "admin":
             deleteUsername = self.request.get("deleteuser")
             deleteQuery = ndb.gql(
-                "SELECT * FROM TestUsers21 WHERE username = :user AND ANCESTOR is :ancestor",
+                "SELECT * FROM TestUsers21 WHERE username = :user AND ANCESTOR is :ancestor ORDER BY created",
                 user=deleteUsername,
                 ancestor=blog_key(DEFAULT_BLOG_NAME))
             deleteUser = deleteQuery.get()
             deleteUser.key.delete()
             print "user deleted"
             deleteResults = ndb.gql(
-                "SELECT * FROM TestResults21 WHERE user = :user AND ANCESTOR is :ancestor",
+                "SELECT * FROM TestResults21 WHERE user = :user AND ANCESTOR is :ancestor ORDER BY created",
                 user=deleteUsername,
                 ancestor=blog_key(DEFAULT_BLOG_NAME))
             for deleteResult in deleteResults:
@@ -484,7 +484,7 @@ class ChangePassword(Handler):
             verify_error = ""
 
             userQ = ndb.gql(
-                "SELECT * FROM TestUsers21 WHERE username = :user AND ANCESTOR is :ancestor",
+                "SELECT * FROM TestUsers21 WHERE username = :user AND ANCESTOR is :ancestor ORDER BY created",
                 user=self.user_logged_in(),
                 ancestor=blog_key(DEFAULT_BLOG_NAME))
             user = userQ.get()
@@ -501,7 +501,7 @@ class ChangePassword(Handler):
                             admin=self.admin_logged_in())
             else:
                 user_check = ndb.gql(
-                    "SELECT * FROM TestUsers21 WHERE username = :user AND ANCESTOR is :ancestor",
+                    "SELECT * FROM TestUsers21 WHERE username = :user AND ANCESTOR is :ancestor ORDER BY created",
                     user=username,
                     ancestor=blog_key(DEFAULT_BLOG_NAME))
 

@@ -18,6 +18,7 @@ class TestUsers21(ndb.Model):
 class TestQuestions21(ndb.Model):
     question = ndb.StringProperty(required=True)
     options = ndb.StringProperty(repeated=True)
+    created = ndb.DateTimeProperty(auto_now_add=True)
 
     def render(self):
         self._render_text = self.content.replace('\n', '<br>')
@@ -28,6 +29,7 @@ class TestResults21(ndb.Model):
     choice = ndb.StringProperty()
     question = ndb.StringProperty()
     user = ndb.StringProperty()
+    created = ndb.DateTimeProperty(auto_now_add=True)
 
     def render(self):
         self._render_text = self.content.replace('\n', '<br>')

@@ -14,9 +14,44 @@ indexes:
   ancestor: yes
   properties:
   - name: created
+
+- kind: TestQuestions21
+  ancestor: yes
+  properties:
+  - name: created
+    direction: desc
+
+- kind: TestQuestions21
+  ancestor: yes
+  properties:
+  - name: question
+  - name: created
+
+- kind: TestResults21
+  ancestor: yes
+  properties:
+  - name: choice
+  - name: question
+  - name: created
+
+- kind: TestResults21
+  ancestor: yes
+  properties:
+  - name: created
     direction: desc
 
 - kind: TestResults21
+  ancestor: yes
+  properties:
+  - name: user
+  - name: created
+
+- kind: TestUsers21
+  ancestor: yes
+  properties:
+  - name: created
+
+- kind: TestUsers21
   ancestor: yes
   properties:
   - name: created
@@ -25,5 +60,5 @@ indexes:
 - kind: TestUsers21
   ancestor: yes
   properties:
+  - name: username
   - name: created
-    direction: desc

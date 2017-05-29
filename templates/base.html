@@ -72,17 +72,15 @@ dev<!DOCTYPE html>
 
       .question {
         font-weight: bold;
+        width: 800px;
+      }
+
+      .headers {
+        font-weight: bold;
       }
 
       #links{
         text-align: right;
-      }
-
-      #header{
-        position: fixed;
-        height: 70px;
-        top: 0;
-        background: lightgrey;
       }
 
       hr.main{
@@ -94,12 +92,29 @@ dev<!DOCTYPE html>
         color: grey;
       }
 
+      td{
+        width: 200px;
+      }
+
+      #results{
+        text-align: center;
+      }
+
+      #header{
+        position: fixed;
+        height: 70px;
+        top: 0;
+        background: lightgrey;
+        text-align: left;
+      }
+
+
     </style>
   </head>
   <body>
     <div class="grid">
       <div class="row" id="header">
-        <div class="col-6" id="title">
+        <div class="col-5" id="title">
           <h1>Hockey Pool Poll</h1>
         </div>
           {% if logged_in == True and admin == True %}
@@ -125,13 +140,6 @@ dev<!DOCTYPE html>
                   </td>
                   <td>
                     <a href = "/deleteuser">Delete User</a>
-                  </td>
-                </tr>
-                <tr>
-                  <td>
-                  </td>
-                  <td>
-                    <a href = "/editquestion">Edit Question</a>
                   </td>
                 </tr>
               </table>
